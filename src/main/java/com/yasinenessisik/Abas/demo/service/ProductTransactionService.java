@@ -1,7 +1,9 @@
 package com.yasinenessisik.Abas.demo.service;
 
+import com.yasinenessisik.Abas.demo.dto.NewProductTransactionDto;
 import com.yasinenessisik.Abas.demo.model.Product;
 import com.yasinenessisik.Abas.demo.model.ProductTransaction;
+import com.yasinenessisik.Abas.demo.model.Transaction;
 import com.yasinenessisik.Abas.demo.repository.ProductRepo;
 import com.yasinenessisik.Abas.demo.repository.ProductTransactionRepo;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -18,20 +21,19 @@ public class ProductTransactionService {
 
     private final ProductTransactionRepo productTransactionRepo;
     private final ProductService productService;
+    private final TransactionService transactionService;
 
-    public ProductTransactionService(ProductTransactionRepo productTransactionRepo, ProductService productService) {
+    public ProductTransactionService(ProductTransactionRepo productTransactionRepo, ProductService productService, TransactionService transactionService) {
         this.productTransactionRepo = productTransactionRepo;
         this.productService = productService;
+        this.transactionService = transactionService;
     }
 
     public BigDecimal getTotalValue(){
-        productTransactionRepo.findAll().forEach(pt ->
-                System.out.println("Quantity: " + pt.getQuantity() + ", Unit Price: " + pt.getUnitPrice())
-        );
         BigDecimal sum = productTransactionRepo.findAll().stream()
                 .map(pt -> pt.getUnitPrice().multiply(new BigDecimal(pt.getQuantity())))
                 .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
-        return sum.setScale(5, RoundingMode.HALF_UP); // İki ondalık basamağa yuvarlama
+        return sum.setScale(4, RoundingMode.HALF_UP);
 
     }
     public BigDecimal getAveragePriceForAllProducts(){
@@ -96,4 +98,21 @@ public class ProductTransactionService {
         return totalQuantity > 0 ? totalPrice.divide(new BigDecimal(totalQuantity), BigDecimal.ROUND_HALF_UP) : BigDecimal.ZERO;
     }
 
+    public void postNewProductTransaction(NewProductTransactionDto newProductTransactionDto) {
+        Transaction transaction = new Transaction();
+        transaction.setTransactionNumber(newProductTransactionDto.getTransactionNumber());
+        transactionService.saveTransaction(transaction);
+
+        BigDecimal price1t1 = new BigDecimal(String.valueOf(newProductTransactionDto.getPrice()));
+        int quantity = newProductTransactionDto.getQuantity();
+
+        Product product = productService.getProductByProductNumber(newProductTransactionDto.getProductNumber());
+
+        ProductTransaction pt1t1 = new ProductTransaction(product, transaction, quantity, price1t1);
+        productTransactionRepo.save(pt1t1);
+    }
+
+    public List<ProductTransaction> getAll() {
+        return productTransactionRepo.findAll();
+    }
 }

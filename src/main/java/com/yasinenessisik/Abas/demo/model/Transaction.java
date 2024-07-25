@@ -1,5 +1,6 @@
 package com.yasinenessisik.Abas.demo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.util.HashSet;
@@ -10,6 +11,7 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int transactionId;
     private int transactionNumber;
+    @JsonIgnore
     @OneToMany(mappedBy = "transaction", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.LAZY)
     private Set<ProductTransaction> productTransactions = new HashSet<>();
 

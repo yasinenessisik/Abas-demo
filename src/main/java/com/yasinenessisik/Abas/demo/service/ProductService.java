@@ -16,4 +16,10 @@ public class ProductService {
     protected List<Product> findAll(){
         return productRepo.findAll();
     }
+    protected Product saveProduct(Product product){
+        return productRepo.save(product);
+    }
+    protected Product getProductByProductNumber(int number){
+        return productRepo.findByProductNumber(number);
+    }
 }
